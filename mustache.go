@@ -21,6 +21,9 @@ type varElement struct {
     name string
     raw  bool
 }
+func (ve varElement) GetName() string {
+    return ve.name
+}
 
 type sectionElement struct {
     name      string
@@ -525,6 +528,20 @@ func (tmpl *Template) RenderInLayout(layout *Template, context ...interface{}) s
     copy(allContext[1:], context)
     allContext[0] = map[string]string{"content": content}
     return layout.Render(allContext...)
+}
+
+func (tmpl *Template) GetVariables() []varElement {
+    var varElements []varElement
+    for _, elem := range tmpl.elems {
+        elemVal := reflect.ValueOf(elem)
+        if elemVal.Kind() == reflect.Ptr {
+            elemVal = elemVal.Elem()
+        }
+        if varElem, ok := elemVal.Interface().(varElement); ok {
+            varElements = append(varElements, varElem)
+        }
+    }
+    return varElements
 }
 
 func ParseString(data string) (*Template, error) {
